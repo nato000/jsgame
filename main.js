@@ -1,90 +1,50 @@
-const $btn1 = document.getElementById('btn-smash');
-const $btn2 = document.getElementById('btn-blast');
+import { random, getElById, disableButton } from './utils.js'
+import Pokemon from './pokemon.js'
+import createLog from './logs.js'
 
-init();
+const player1 = new Pokemon({ name: 'Pikachu', hp: 100, type: 'electric', selectors: 'character' })
+const player2 = new Pokemon({ name: 'Charmander', hp: 100, type: 'fire', selectors: 'enemy' })
 
-function init() {
-    console.log('Start Game!');
-}
+const $btnKick = getElById('btn-kick')
+const $btnBump = getElById('btn-bump')
 
-$btn1.addEventListener('click', function () {
-    attack(20, 20, 'smash')
-})
-$btn2.addEventListener('click', function () {
-    attack(30, 30, 'blast')
-})
+const MAX_DAMAGE_KICK = 60
+const MAX_DAMAGE_BUMP = 20
 
-const picachu = {
-    name: 'picachu',
-    defaultHP: 100,
-    damageHP: 100,
-    elHP: document.getElementById('health-picachu'),
-    elProgressbar: document.getElementById('progressbar-picachu'),
-    renderHP,
-    changeHP,
-}
+const buttonClickCounter = (num, el) => {
+  const MAX_CLICKS = num
+  let count = MAX_CLICKS
 
-const charmander = {
-    name: 'charmander',
-    defaultHP: 100,
-    damageHP: 100,
-    elHP: document.getElementById('health-charmander'),
-    elProgressbar: document.getElementById('progressbar-charmander'),
-    renderHP,
-    changeHP,
-}
+  const innerText = el.innerText
+  el.innerText = `${innerText} (${count})`
 
-function random(num) {
-    return Math.ceil(Math.random() * num);
+  return () => {
+    count--
 
-}
-
-function attack(cdamage, pdamage, atack) {
-    console.log(atack);
-    picachu.changeHP(random(pdamage));
-    charmander.changeHP(random(cdamage));
-    picachu.renderHP();
-    charmander.renderHP();
-    logOut();
-}
-
-function logOut(first, second) {
-    const { name: name1, damageHP, defaultHP } = picachu;
-    const { name: name2 } = charmander;
-    const logs = [
-        `${name1} вспомнил что-то важное, но неожиданно ${name2}, не помня себя от испуга, ударил в предплечье врага.[${damageHP} / ${defaultHP} ]  `,
-        `${name1} поперхнулся, и за это ${name2} с испугу приложил прямой удар коленом в лоб врага. [${damageHP} / 100 ]`,
-        `${name1} забылся, но в это время наглый ${name2}, приняв волевое решение, неслышно подойдя сзади, ударил. [${damageHP} / ${defaultHP} ]`,
-        `${name1} пришел в себя, но неожиданно ${name2} случайно нанес мощнейший удар. [${damageHP} / ${defaultHP} ]`,
-        `${name1} поперхнулся, но в это время ${name2} нехотя раздробил кулаком <вырезанно цензурой> противника. [${damageHP} / ${defaultHP} ]`,
-        `${name1} удивился, а ${name2} пошатнувшись влепил подлый удар. [${damageHP} / ${defaultHP} ]`,
-        `${name1} высморкался, но неожиданно ${name2} провел дробящий удар. [${damageHP} / ${defaultHP}] `,
-        `${name1} пошатнулся, и внезапно наглый ${name2} беспричинно ударил в ногу противника [${damageHP} / ${defaultHP}]`,
-        `${name1} расстроился, как вдруг, неожиданно ${name2} случайно влепил стопой в живот соперника. [${damageHP} / ${defaultHP} ]`,
-        `${name1} пытался что-то сказать, но вдруг, неожиданно ${name2} со скуки, разбил бровь сопернику. [${damageHP} / ${defaultHP} ]`,
-    ];
-    const $logs = document.querySelector('#logs');
-    const $p = document.createElement('p');
-    $p.innerText = logs[random(logs.length) - 1];
-    $logs.insertBefore($p, $logs.children[0]);
-}
-
-function renderHP() {
-    this.elHP.innerText = this.damageHP + '/' + this.defaultHP;
-    this.elProgressbar.style.width = this.damageHP + '%';
-
-}
-
-function changeHP(count) {
-    const { name } = this;
-    if (this.damageHP < count) {
-        this.damageHP >= 0,
-            $btn1.disabled = true,
-            $btn2.disabled = true,
-            alert('Для ' + name + ' GAME OVER!'),
-            location.reload()
-    } else {
-        this.damageHP -= count;
+    if (count === 0) {
+      disableButton(el)
     }
 
+    el.innerText = `${innerText} (${count})`
+    return count
+  }
 }
+
+const countJolt = buttonClickCounter(btn1Clk.value, $btnKick)
+$btnKick.addEventListener('click', function () {
+  countJolt()
+  player1.changeHP(random(MAX_DAMAGE_KICK), (count, damageHP, defaultHP) => {
+    createLog(player1, player2, count, damageHP, defaultHP)
+  })
+  player2.changeHP(random(MAX_DAMAGE_KICK), (count, damageHP, defaultHP) => {
+    createLog(player2, player1, count, damageHP, defaultHP)
+  })
+})
+
+const countBump = buttonClickCounter(btn2Clk.value, $btnBump)
+$btnBump.addEventListener('click', function () {
+  countBump()
+  player2.changeHP(random(MAX_DAMAGE_BUMP), (count, damageHP, defaultHP) => {
+    createLog(player2, player1, count, damageHP, defaultHP)
+  })
+})
